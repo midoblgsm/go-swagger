@@ -7,13 +7,13 @@
 // templates/docstring.gotmpl
 // templates/model.gotmpl
 // templates/modelvalidator.gotmpl
+// templates/schemabody.gotmpl
 // templates/schematype.gotmpl
 // templates/server/builder.gotmpl
 // templates/server/configureapi.gotmpl
 // templates/server/main.gotmpl
 // templates/server/operation.gotmpl
 // templates/server/parameter.gotmpl
-// templates/struct_field_doc_string.gotmpl
 // templates/structfield.gotmpl
 // templates/validation/customformat.gotmpl
 // templates/validation/primitive.gotmpl
@@ -171,6 +171,24 @@ func templatesModelvalidatorGotmpl() (*asset, error) {
 	return a, err
 }
 
+// templatesSchemabodyGotmpl reads file data from disk. It returns an error on failure.
+func templatesSchemabodyGotmpl() (*asset, error) {
+	path := "/home/ivan/go/src/github.com/go-swagger/go-swagger/generator/templates/schemabody.gotmpl"
+	name := "templates/schemabody.gotmpl"
+	bytes, err := bindataRead(path, name)
+	if err != nil {
+		return nil, err
+	}
+
+	fi, err := os.Stat(path)
+	if err != nil {
+		err = fmt.Errorf("Error reading asset info %s at %s: %v", name, path, err)
+	}
+
+	a := &asset{bytes: bytes, info: fi}
+	return a, err
+}
+
 // templatesSchematypeGotmpl reads file data from disk. It returns an error on failure.
 func templatesSchematypeGotmpl() (*asset, error) {
 	path := "/home/ivan/go/src/github.com/go-swagger/go-swagger/generator/templates/schematype.gotmpl"
@@ -265,24 +283,6 @@ func templatesServerOperationGotmpl() (*asset, error) {
 func templatesServerParameterGotmpl() (*asset, error) {
 	path := "/home/ivan/go/src/github.com/go-swagger/go-swagger/generator/templates/server/parameter.gotmpl"
 	name := "templates/server/parameter.gotmpl"
-	bytes, err := bindataRead(path, name)
-	if err != nil {
-		return nil, err
-	}
-
-	fi, err := os.Stat(path)
-	if err != nil {
-		err = fmt.Errorf("Error reading asset info %s at %s: %v", name, path, err)
-	}
-
-	a := &asset{bytes: bytes, info: fi}
-	return a, err
-}
-
-// templatesStruct_field_doc_stringGotmpl reads file data from disk. It returns an error on failure.
-func templatesStruct_field_doc_stringGotmpl() (*asset, error) {
-	path := "/home/ivan/go/src/github.com/go-swagger/go-swagger/generator/templates/struct_field_doc_string.gotmpl"
-	name := "templates/struct_field_doc_string.gotmpl"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
 		return nil, err
@@ -428,13 +428,13 @@ var _bindata = map[string]func() (*asset, error){
 	"templates/docstring.gotmpl": templatesDocstringGotmpl,
 	"templates/model.gotmpl": templatesModelGotmpl,
 	"templates/modelvalidator.gotmpl": templatesModelvalidatorGotmpl,
+	"templates/schemabody.gotmpl": templatesSchemabodyGotmpl,
 	"templates/schematype.gotmpl": templatesSchematypeGotmpl,
 	"templates/server/builder.gotmpl": templatesServerBuilderGotmpl,
 	"templates/server/configureapi.gotmpl": templatesServerConfigureapiGotmpl,
 	"templates/server/main.gotmpl": templatesServerMainGotmpl,
 	"templates/server/operation.gotmpl": templatesServerOperationGotmpl,
 	"templates/server/parameter.gotmpl": templatesServerParameterGotmpl,
-	"templates/struct_field_doc_string.gotmpl": templatesStruct_field_doc_stringGotmpl,
 	"templates/structfield.gotmpl": templatesStructfieldGotmpl,
 	"templates/validation/customformat.gotmpl": templatesValidationCustomformatGotmpl,
 	"templates/validation/primitive.gotmpl": templatesValidationPrimitiveGotmpl,
@@ -498,6 +498,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		}},
 		"modelvalidator.gotmpl": &bintree{templatesModelvalidatorGotmpl, map[string]*bintree{
 		}},
+		"schemabody.gotmpl": &bintree{templatesSchemabodyGotmpl, map[string]*bintree{
+		}},
 		"schematype.gotmpl": &bintree{templatesSchematypeGotmpl, map[string]*bintree{
 		}},
 		"server": &bintree{nil, map[string]*bintree{
@@ -511,8 +513,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			}},
 			"parameter.gotmpl": &bintree{templatesServerParameterGotmpl, map[string]*bintree{
 			}},
-		}},
-		"struct_field_doc_string.gotmpl": &bintree{templatesStruct_field_doc_stringGotmpl, map[string]*bintree{
 		}},
 		"structfield.gotmpl": &bintree{templatesStructfieldGotmpl, map[string]*bintree{
 		}},
