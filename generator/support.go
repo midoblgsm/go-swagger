@@ -296,10 +296,10 @@ func (a *appGenerator) makeCodegenApp() (genApp, error) {
 		}
 	}
 
-	var genMods []genModel
+	var genMods []GenDefinition
 	defaultImports = append(defaultImports, filepath.Join(baseImport(a.Target), a.ModelsPackage))
 	for mn, m := range a.Models {
-		mod, err := makeCodegenModel(
+		mod, err := makeGenDefinition(
 			mn,
 			a.ModelsPackage,
 			m,
@@ -402,7 +402,7 @@ type genApp struct {
 	Consumes            []genSerGroup
 	Produces            []genSerGroup
 	SecurityDefinitions []genSecurityScheme
-	Models              []genModel
+	Models              []GenDefinition
 	Operations          []genOperation
 	OperationGroups     []genOperationGroup
 	SwaggerJSON         string
