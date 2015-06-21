@@ -298,6 +298,7 @@ func (a *appGenerator) makeCodegenApp() (genApp, error) {
 
 	var genMods []GenDefinition
 	defaultImports = append(defaultImports, filepath.Join(baseImport(a.Target), a.ModelsPackage))
+
 	for mn, m := range a.Models {
 		mod, err := makeGenDefinition(
 			mn,
