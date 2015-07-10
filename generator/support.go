@@ -208,12 +208,12 @@ var mediaTypeNames = map[string]string{
 }
 
 var knownProducers = map[string]string{
-	"json": "swagger.JSONProducer",
+	"json": "httpkit.JSONProducer",
 	"yaml": "swagger.YAMLProducer",
 }
 
 var knownConsumers = map[string]string{
-	"json": "swagger.JSONConsumer",
+	"json": "httpkit.JSONConsumer",
 	"yaml": "swagger.YAMLConsumer",
 }
 

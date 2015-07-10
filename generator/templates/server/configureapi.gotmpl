@@ -12,9 +12,10 @@ import (
 
 // This file is safe to edit. Once it exists it won't be overwritten
 
-func configureAPI(api *{{.Package}}.{{.AppName}}API) {
+func ConfigureAPI(api *{{.Package}}.{{.AppName}}API) {
   // configure the api here
   api.ServeError = errors.ServeError
+
 
   {{range .Consumes}}{{if .Implementation}}api.{{.ClassName}}Consumer = {{.Implementation}}()
   {{else}}api.{{.ClassName}}Consumer = httpkit.ConsumerFunc(func(r io.Reader, target interface{}) error {

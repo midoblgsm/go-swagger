@@ -25,6 +25,14 @@ func init() {
 
 	bm, _ := Asset("templates/server/operation.gotmpl")
 	operationTemplate = template.Must(template.New("operation").Parse(string(bm)))
+
+
+
+	bts, _ := Asset("templates/test/tmp_suite_test.gotmpl")
+	operationTemplate = template.Must(template.New("operation").Parse(string(bts)))
+
+	bt, _ := Asset("templates/test/tmp_test.gotmpl")
+	operationTemplate = template.Must(template.New("operation").Parse(string(bt)))
 }
 
 // GenerateServerOperation generates a parameter model, parameter validator, http handler implementations for a given operation
@@ -53,6 +61,48 @@ func GenerateServerOperation(operationNames, tags []string, includeHandler, incl
 			ModelsPackage:        opts.ModelPackage,
 			ClientPackage:        opts.ClientPackage,
 			ServerPackage:        opts.ServerPackage,
+			TestPackage:          opts.TestPackage,
+			Operation:            *operation,
+			SecurityRequirements: specDoc.SecurityRequirementsFor(operation),
+			Principal:            opts.Principal,
+			Target:               filepath.Join(opts.Target, opts.APIPackage),
+			Tags:                 tags,
+			IncludeHandler:       includeHandler,
+			IncludeParameters:    includeParameters,
+			DumpData:             opts.DumpData,
+		}
+		if err := generator.Generate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// GenerateTestOperation generates test suits for operations
+func GenerateTestOperation(operationNames, tags []string, includeHandler, includeParameters bool, opts GenOpts) error {
+	// Load the spec
+	specPath, specDoc, err := loadSpec(opts.Spec)
+	if err != nil {
+		return err
+	}
+
+	if len(operationNames) == 0 {
+		operationNames = specDoc.OperationIDs()
+	}
+
+	for _, operationName := range operationNames {
+		operation, ok := specDoc.OperationForName(operationName)
+		if !ok {
+			return fmt.Errorf("operation %q not found in %s", operationName, specPath)
+		}
+
+		generator := operationGenerator{
+			Name:                 operationName,
+			APIPackage:           opts.APIPackage,
+			ModelsPackage:        opts.ModelPackage,
+			ClientPackage:        opts.ClientPackage,
+			ServerPackage:        opts.ServerPackage,
+			TestPackage:          opts.TestPackage,
 			Operation:            *operation,
 			SecurityRequirements: specDoc.SecurityRequirementsFor(operation),
 			Principal:            opts.Principal,
@@ -76,6 +126,7 @@ type operationGenerator struct {
 	ModelsPackage        string
 	ServerPackage        string
 	ClientPackage        string
+	TestPackage			 string
 	Operation            spec.Operation
 	SecurityRequirements []spec.SecurityRequirement
 	Principal            string

@@ -11,6 +11,7 @@ type shared struct {
 	ModelPackage  string         `long:"model-package" short:"m" description:"the package to save the models" default:"models"`
 	ServerPackage string         `long:"server-package" short:"s" description:"the package to save the server specific code" default:"restapi"`
 	ClientPackage string         `long:"client-package" short:"c" description:"the package to save the client specific code" default:"client"`
+	TestPackage   string         `long:"test-package" short:"T" description:"the package to save the test specific code" default:"test"`
 	Target        flags.Filename `long:"target" short:"t" default:"./" description:"the base directory for generating the files"`
 	// TemplateDir  flags.Filename `long:"template-dir"`
 
@@ -39,6 +40,7 @@ func (s *Server) Execute(args []string) error {
 		ModelPackage:  s.ModelPackage,
 		ServerPackage: s.ServerPackage,
 		ClientPackage: s.ClientPackage,
+		TestPackage:   s.TestPackage,
 		Principal:     s.Principal,
 	}
 
