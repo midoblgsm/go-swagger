@@ -1,4 +1,4 @@
-package tmp_test
+package {{.Package}}_test
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -10,38 +10,38 @@ import (
   {{end}}
 )
 
-var _ = Describe("#ping", func() {
+var _ = Describe("#{{.OperationID}}", func() {
 	var (
-		pingData   string
-		pingResult bool
-		pingErr    error
+		{{.OperationID}}Data   string
+		{{.OperationID}}Result bool
+		{{.OperationID}}Err    error
 	)
 
-	Context("when pings succeed", func() {
+	Context("when {{.OperationID}} succeed", func() {
 		BeforeEach(func() {
-			pingData = "Hello"
-			pingErr = nil
-			pingResult = true
+			{{.OperationID}}Data = "{{.OperationID}} data"
+			{{.OperationID}}Err = nil
+			{{.OperationID}}Result = true
 		})
 
-		It("pings with pingData and gets it back", func() {
-			//Do ping
-			Expect(pingErr).ToNot(HaveOccurred())
-			Expect(pingResult).To(BeTrue())
-			Expect(pingData).To(Equal("Hello"))
+		It("{{.OperationID}} with {{.OperationID}}Data and gets it back", func() {
+			//Do {{.OperationID}}
+			Expect({{.OperationID}}Err).ToNot(HaveOccurred())
+			Expect({{.OperationID}}Result).To(BeTrue())
+			Expect({{.OperationID}}Data).To(Equal("{{.OperationID}} data"))
 		})
 	})
 
-	Context("when pings fail", func() {
+	Context("when {{.OperationID}} fail", func() {
 		BeforeEach(func() {
-			pingErr = nil
-			pingResult = false
+			{{.OperationID}}Err = nil
+			{{.OperationID}}Result = false
 		})
 
-		It("fails to pings with pingData", func() {
-			//Do ping
-			Expect(pingErr).ToNot(HaveOccurred())
-			Expect(pingResult).To(BeFalse())
+		It("fails to execute {{.OperationID}} with {{.OperationID}}Data", func() {
+			//Do {{.OperationID}}
+			Expect({{.OperationID}}Err).ToNot(HaveOccurred())
+			Expect({{.OperationID}}Result).To(BeFalse())
 		})
 	})
 })

@@ -28,7 +28,7 @@ It aims to represent the contract of your API with a language agnostic descripti
 			cmd.ShortDescription = "generate all the files for a server application"
 			cmd.LongDescription = cmd.ShortDescription
 		case "test":
-			cmd.ShortDescription = "generate test suit for an application"
+			cmd.ShortDescription = "generate test for an application"
 			cmd.LongDescription = cmd.ShortDescription		
 		case "model":
 			cmd.ShortDescription = "generate one or more models from the swagger spec"

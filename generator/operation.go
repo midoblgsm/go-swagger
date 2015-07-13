@@ -25,14 +25,6 @@ func init() {
 
 	bm, _ := Asset("templates/server/operation.gotmpl")
 	operationTemplate = template.Must(template.New("operation").Parse(string(bm)))
-
-
-
-	bts, _ := Asset("templates/test/tmp_suite_test.gotmpl")
-	operationTemplate = template.Must(template.New("operation").Parse(string(bts)))
-
-	bt, _ := Asset("templates/test/tmp_test.gotmpl")
-	operationTemplate = template.Must(template.New("operation").Parse(string(bt)))
 }
 
 // GenerateServerOperation generates a parameter model, parameter validator, http handler implementations for a given operation

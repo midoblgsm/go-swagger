@@ -147,21 +147,24 @@ func (t *testGenerator) GenerateTest() error {
 		return err
 	}
 
-	if err := t.generateTest(&test); err != nil {
-		return err
+	for _, operation := range test.Operations {
+		test.OperationID = operation.Name
+		if err := t.generateTest(&test); err != nil {
+			return err
+		}		
 	}
 
 	return nil
 }
 
 func (t *testGenerator) generateSuiteTest(test *genTest) error {
-	pth := filepath.Join(t.Target, "cmd", swag.ToCommandName(test.AppName+"suite_test"))
-	nm := "suite_test" + test.AppName
+	pth := filepath.Join(t.Target, "cmd", swag.ToCommandName(test.AppName))
+	nm := test.AppName + "_suite_test"
 	buf := bytes.NewBuffer(nil)
 	if err := suiteTestTemplate.Execute(buf, test); err != nil {
 		return err
 	}
-	log.Println("rendered suite test template:", test.Package+".suite_test"+test.AppName)
+	log.Println("rendered suite test template:", test.Package + test.AppName + "_suite_test")
 	return writeToFileIfNotExist(pth, nm, buf.Bytes())
 }
 
@@ -170,8 +173,8 @@ func (t *testGenerator) generateTest(test *genTest) error {
 	if err := testTemplate.Execute(buf, test); err != nil {
 		return err
 	}
-	log.Println("rendered test template:", "test."+test.AppName)
-	return writeToFile(filepath.Join(t.Target, "cmd", swag.ToCommandName(test.AppName+"test")), "test", buf.Bytes())
+	log.Println("rendered test template:", "test." + test.OperationID)
+	return writeToFile(filepath.Join(t.Target, "cmd", swag.ToCommandName(test.AppName)), test.OperationID + "_test", buf.Bytes())
 }
 
 
@@ -348,6 +351,8 @@ func (t *testGenerator) makeCodegenTest() genTest {
 	var genOps []genOperation
 	tns := make(map[string]struct{})
 	for on, o := range t.Operations {
+		//fmt.Printf("====> %+v\n", o)
+
 		authed := len(t.SpecDoc.SecurityRequirementsFor(&o)) > 0
 		ap := t.APIPackage
 		if t.APIPackage == t.Package {
@@ -422,6 +427,7 @@ type genTest struct {
 	SecurityDefinitions []genSecurityScheme
 	Models              []genModel
 	Operations          []genOperation
+	OperationID 		string
 	IncludeUI           bool
 	SwaggerJSON         string
 }
