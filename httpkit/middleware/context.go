@@ -35,6 +35,7 @@ type routableUntypedAPI struct {
 }
 
 func newRoutableUntypedAPI(spec *spec.Document, api *untyped.API, context *Context) *routableUntypedAPI {
+	
 	var handlers map[string]http.Handler
 	if spec == nil || api == nil {
 		return nil
@@ -51,7 +52,7 @@ func newRoutableUntypedAPI(spec *spec.Document, api *untyped.API, context *Conte
 				handlers[op.ID] = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					// lookup route info in the context
 					route, _ := context.RouteInfo(r)
-
+					
 					// bind and validate the request using reflection
 					bound, validation := context.BindAndValidate(r, route)
 					if validation != nil {
@@ -228,13 +229,18 @@ func (c *Context) LookupRoute(request *http.Request) (*MatchedRoute, bool) {
 
 // RouteInfo tries to match a route for this request
 func (c *Context) RouteInfo(request *http.Request) (*MatchedRoute, bool) {
-	if v, ok := context.GetOk(request, ctxMatchedRoute); ok {
+
+
+
+	v, ok := context.GetOk(request, ctxMatchedRoute)
+	if ok {
 		if val, ok := v.(*MatchedRoute); ok {
 			return val, ok
 		}
 	}
 
-	if route, ok := c.LookupRoute(request); ok {
+	route, ok := c.LookupRoute(request)
+	if ok {
 		context.Set(request, ctxMatchedRoute, route)
 		return route, ok
 	}
@@ -310,6 +316,8 @@ func (c *Context) NotFound(rw http.ResponseWriter, r *http.Request) {
 
 // Respond renders the response after doing some content negotiation
 func (c *Context) Respond(rw http.ResponseWriter, r *http.Request, produces []string, route *MatchedRoute, data interface{}) {
+
+
 	offers := []string{c.api.DefaultProduces()}
 	for _, mt := range produces {
 		if mt != c.api.DefaultProduces() {
@@ -346,7 +354,7 @@ func (c *Context) Respond(rw http.ResponseWriter, r *http.Request, produces []st
 		}
 		return
 	}
-
+      			
 	if _, code, ok := route.Operation.SuccessResponse(); ok {
 		rw.WriteHeader(code)
 		if code == 201 || code == 204 || r.Method == "HEAD" {

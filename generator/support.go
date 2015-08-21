@@ -213,12 +213,12 @@ var mediaTypeNames = map[string]string{
 
 var knownProducers = map[string]string{
 	"json": "httpkit.JSONProducer",
-	"yaml": "swagger.YAMLProducer",
+	"yaml": "httpkit.YAMLProducer",
 }
 
 var knownConsumers = map[string]string{
 	"json": "httpkit.JSONConsumer",
-	"yaml": "swagger.YAMLConsumer",
+	"yaml": "httpkit.YAMLConsumer",
 }
 
 func getSerializer(sers []genSerGroup, ext string) (*genSerGroup, bool) {

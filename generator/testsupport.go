@@ -17,6 +17,7 @@ import (
 var (
 	suiteTestTemplate      *template.Template
 	testTemplate         *template.Template
+	tckTemplate         *template.Template
 )
 
 func init() {
@@ -26,10 +27,13 @@ func init() {
 
 	t, _ := Asset("templates/test/tmp_test.gotmpl")
 	testTemplate = template.Must(template.New("tmp_test").Parse(string(t)))
+
+	tckr, _ := Asset("templates/tck/tckReporter.gotmpl")
+	tckTemplate = template.Must(template.New("tmp_tck").Parse(string(tckr)))
 }
 
 // GenerateSupport generates the supporting files for an API
-func GenerateTestSupport(name string, modelNames, operationIDs []string, includeUI bool, opts GenOpts) error {
+func GenerateTestSupport(name string, modelNames, operationIDs []string, includeUI bool,includeTCK bool, opts GenOpts) error {
 		// Load the spec
 	_, specDoc, err := loadSpec(opts.Spec)
 	if err != nil {
@@ -87,6 +91,7 @@ func GenerateTestSupport(name string, modelNames, operationIDs []string, include
 		ClientPackage: opts.ClientPackage,
 		Principal:     opts.Principal,
 		IncludeUI:     includeUI,
+		IncludeTCK:    includeTCK,
 	}
 
 	return generator.GenerateTest()
@@ -106,28 +111,9 @@ type testGenerator struct {
 	Target        string
 	DumpData      bool
 	IncludeUI     bool
+	IncludeTCK	  bool
 }
 
-// func baseImport(tgt string) string {
-// 	p, err := filepath.Abs(tgt)
-// 	if err != nil {
-// 		log.Fatalln(err)
-// 	}
-
-// 	var pth string
-// 	for _, gp := range filepath.SplitList(os.Getenv("GOPATH")) {
-// 		pp := filepath.Join(gp, "src")
-// 		if strings.HasPrefix(p, pp) {
-// 			pth = strings.TrimPrefix(p, pp+"/")
-// 			break
-// 		}
-// 	}
-
-// 	if pth == "" {
-// 		log.Fatalln("target must reside inside a location in the gopath")
-// 	}
-// 	return pth
-// }
 
 func (t *testGenerator) GenerateTest() error {
 	test := t.makeCodegenTest()
@@ -138,21 +124,25 @@ func (t *testGenerator) GenerateTest() error {
 		return nil
 	}
 
-//	if err := t.generateAPIBuilder(&app); err != nil {
-//		return err
-//	}
 	test.DefaultImports = append(test.DefaultImports, filepath.Join(baseImport(t.Target), t.ServerPackage, t.APIPackage))
 
+
+	if t.IncludeTCK {
+	if err := t.generateTCK(&test); err != nil {
+		return err
+	}
+}
 	if err := t.generateSuiteTest(&test); err != nil {
 		return err
 	}
-
+	
 	for _, operation := range test.Operations {
 		test.OperationID = operation.Name
 		if err := t.generateTest(&test); err != nil {
 			return err
 		}		
 	}
+
 
 	return nil
 }
@@ -168,6 +158,17 @@ func (t *testGenerator) generateSuiteTest(test *genTest) error {
 	return writeToFileIfNotExist(pth, nm, buf.Bytes())
 }
 
+func (t *testGenerator) generateTCK(test *genTest) error {
+	pth := filepath.Join(t.Target, "cmd", swag.ToCommandName(test.AppName))
+	nm :=  "tck_reporter"
+	buf := bytes.NewBuffer(nil)
+	if err := tckTemplate.Execute(buf, test); err != nil {
+		return err
+	}
+	log.Println("rendered tck template:", test.Package + "tck_reporter")
+	return writeToFileIfNotExist(pth, nm, buf.Bytes())
+}
+
 func (t *testGenerator) generateTest(test *genTest) error {
 	buf := bytes.NewBuffer(nil)
 	if err := testTemplate.Execute(buf, test); err != nil {
@@ -177,44 +178,6 @@ func (t *testGenerator) generateTest(test *genTest) error {
 	return writeToFile(filepath.Join(t.Target, "cmd", swag.ToCommandName(test.AppName)), test.OperationID + "_test", buf.Bytes())
 }
 
-
-// var mediaTypeNames = map[string]string{
-// 	"application/json":        "json",
-// 	"application/x-yaml":      "yaml",
-// 	"application/x-protobuf":  "protobuf",
-// 	"application/x-capnproto": "capnproto",
-// 	"application/x-thrift":    "thrift",
-// 	"application/xml":         "xml",
-// 	"text/xml":                "xml",
-// 	"text/x-markdown":         "markdown",
-// 	"text/html":               "html",
-// 	"text/csv":                "csv",
-// 	"text/tsv":                "tsv",
-// 	"text/javascript":         "js",
-// 	"text/css":                "css",
-// }
-
-// var knownProducers = map[string]string{
-// 	"json": "httpkit.JSONProducer",
-// 	"yaml": "swagger.YAMLProducer",
-// }
-
-// var knownConsumers = map[string]string{
-// 	"json": "httpkit.JSONConsumer",
-// 	"yaml": "swagger.YAMLConsumer",
-// }
-
-// func getSerializer(sers []genSerGroup, ext string) (*genSerGroup, bool) {
-// 	for i := range sers {
-// 		s := &sers[i]
-// 		if s.Name == ext {
-// 			return s, true
-// 		}
-// 	}
-// 	return nil, false
-// }
-
-// func makeCodegenApp(operations map[string]spec.Operation, includeUI bool) genApp {
 func (t *testGenerator) makeCodegenTest() genTest {
 	sw := t.SpecDoc.Spec()
 	// app := makeCodegenApp(t.Operations, t.IncludeUI)
@@ -404,6 +367,7 @@ func (t *testGenerator) makeCodegenTest() genTest {
 		Models:              genMods,
 		Operations:          genOps,
 		IncludeUI:           t.IncludeUI,
+		IncludeTCK:          t.IncludeTCK,
 		Principal:           t.Principal,
 		SwaggerJSON:         fmt.Sprintf("%#v", jsonb),
 	}
@@ -429,38 +393,7 @@ type genTest struct {
 	Operations          []genOperation
 	OperationID 		string
 	IncludeUI           bool
+	IncludeTCK          bool
 	SwaggerJSON         string
 }
 
-// type genSerGroup struct {
-// 	ReceiverName   string
-// 	AppName        string
-// 	ClassName      string
-// 	HumanClassName string
-// 	Name           string
-// 	MediaType      string
-// 	Implementation string
-// 	AllSerializers []genSerializer
-// }
-
-// type genSerializer struct {
-// 	ReceiverName   string
-// 	AppName        string
-// 	ClassName      string
-// 	HumanClassName string
-// 	Name           string
-// 	MediaType      string
-// 	Implementation string
-// }
-
-// type genSecurityScheme struct {
-// 	AppName        string
-// 	ClassName      string
-// 	HumanClassName string
-// 	Name           string
-// 	ReceiverName   string
-// 	IsBasicAuth    bool
-// 	IsAPIKeyAuth   bool
-// 	Source         string
-// 	Principal      string
-// }

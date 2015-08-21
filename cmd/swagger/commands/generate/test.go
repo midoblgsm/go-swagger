@@ -1,6 +1,7 @@
 package generate
 
 import (
+	"fmt"
 	"github.com/go-swagger/go-swagger/generator"
 )
 
@@ -18,6 +19,8 @@ type Test struct {
 	SkipOperations bool     `long:"skip-operations" description:"no operations will be generated when this flag is specified"`
 	SkipSupport    bool     `long:"skip-support" description:"no supporting files will be generated when this flag is specified"`
 	IncludeUI      bool     `long:"with-ui" description:"when generating a main package it uses a middleware that also serves a swagger-ui for the swagger json"`
+	IncludeTCK     bool     `long:"with-tck" description:"when generating tests it generates a TCK compliance report"`
+
 }
 
 // Execute runs this command
@@ -35,8 +38,9 @@ func (t *Test) Execute(args []string) error {
 
 
 
-	if !t.SkipSupport {
-		if err := generator.GenerateTestSupport(t.Name, t.Models, t.Operations, t.IncludeUI, opts); err != nil {
+	if t.IncludeTCK {
+		fmt.Println("======>  Adding TCK To TEST")
+		if err := generator.GenerateTestSupport(t.Name, t.Models, t.Operations, t.IncludeUI, true, opts); err != nil {
 			return err
 		}
 	}

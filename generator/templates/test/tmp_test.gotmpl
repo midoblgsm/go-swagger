@@ -3,6 +3,7 @@ package {{.Package}}_test
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/maximilien/swagger-cf/utils"
 
   {{range .DefaultImports}}{{printf "%q" .}}
   {{end}}
@@ -12,36 +13,86 @@ import (
 
 var _ = Describe("#{{.OperationID}}", func() {
 	var (
-		{{.OperationID}}Data   string
 		{{.OperationID}}Result bool
 		{{.OperationID}}Err    error
 	)
 
 	Context("when {{.OperationID}} succeed", func() {
 		BeforeEach(func() {
-			{{.OperationID}}Data = "{{.OperationID}} data"
 			{{.OperationID}}Err = nil
 			{{.OperationID}}Result = true
 		})
 
-		It("{{.OperationID}} with {{.OperationID}}Data and gets it back", func() {
-			//Do {{.OperationID}}
+		It("{{.OperationMethod}} {{.BasePath}}{{.OperationPath}} returns {{.ReturnType}}", func() {
+			{{if .Parameters}}
+			wd, _ := os.Getwd()
+			file, _ := ioutil.ReadFile(filepath.Join(wd, "..", "test_fixtures", "{{.OperationID}}.json"))
+			jsonParams, _ := json.Marshal(file)
+			parameters := bytes.NewBuffer(jsonParams)
+			{{end}}
+			httpClient := utils.NewHttpClient("username", "apiKey")
+			response, {{.OperationID}}Err := httpClient.DoRawHttpRequest("{{.BasePath}}{{.OperationID}}",{{.OperationMethod}},{{if .Parameters}} parameters{{else}}new(bytes.Buffer){{end}})
+				if strings.Contains(string(response), "404") {
+					catalogResult = false
+				}
 			Expect({{.OperationID}}Err).ToNot(HaveOccurred())
 			Expect({{.OperationID}}Result).To(BeTrue())
-			Expect({{.OperationID}}Data).To(Equal("{{.OperationID}} data"))
+			
 		})
 	})
 
 	Context("when {{.OperationID}} fail", func() {
 		BeforeEach(func() {
 			{{.OperationID}}Err = nil
-			{{.OperationID}}Result = false
+			{{.OperationID}}Result = true
 		})
 
-		It("fails to execute {{.OperationID}} with {{.OperationID}}Data", func() {
-			//Do {{.OperationID}}
-			Expect({{.OperationID}}Err).ToNot(HaveOccurred())
-			Expect({{.OperationID}}Result).To(BeFalse())
+		Context("when parameters are incorrect", func() {
+			It("{{.OperationMethod}} {{.BasePath}}/{{.OperationPath}} fails", func() {
+				httpClient := utils.NewHttpClient("username", "apiKey")
+				response, {{.OperationID}}Err := httpClient.DoRawHttpRequest("{{.BasePath}}/{{.OperationPath}}", {{.OperationMethod}}, new(bytes.Buffer))
+				if strings.Contains(string(response), "404") {
+					{{.OperationID}}Result = false
+				}
+				Expect({{.OperationID}}Err).ToNot(HaveOccurred())
+				Expect({{.OperationID}}Result).ToNot(BeTrue())
+
+			})
+		})
+
+		Context("when HTTP method is incorrect", func() {
+			{{range $key, $value := .OtherHTTPMethods}}
+
+			It("{{$value}} {{.BasePath}}/{{.OperationPath}} fails with 404", func() {
+				httpClient := utils.NewHttpClient("username", "apiKey")
+				response, {{.OperationID}}Err := httpClient.DoRawHttpRequest("{{.BasePath}}/{{.OperationPath}}", {{$value}}, new(bytes.Buffer))
+				if strings.Contains(string(response), "404") {
+					{{.OperationID}}Result = false
+				}
+				Expect({{.OperationID}}Err).ToNot(HaveOccurred())
+				Expect({{.OperationID}}Result).ToNot(BeTrue())
+			})
+			{{end}}
+
 		})
 	})
 })
+
+// Context("when HTTP method is incorrect", func() {
+// 			{{if ne .HTTPMethod "GET"}}
+
+// 			It(""GET" {{.BasePath}}/{{.OperationPath}} fails with 404", func() {
+// 				httpClient := utils.NewHttpClient("username", "apiKey")
+// 				response, {{.OperationID}}Err := httpClient.DoRawHttpRequest("{{.BasePath}}/{{.OperationPath}}", "GET", new(bytes.Buffer))
+// 				if strings.Contains(string(response), "404") {
+// 					{{.OperationID}}Result = false
+// 				}
+// 				Expect({{.OperationID}}Err).ToNot(HaveOccurred())
+// 				Expect({{.OperationID}}Result).ToNot(BeTrue())
+// 			})
+// 			{{end}}
+
+// 		})
+
+
+	

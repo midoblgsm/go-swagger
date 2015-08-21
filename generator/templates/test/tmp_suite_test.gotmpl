@@ -4,10 +4,22 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"testing"
+	{{range .DefaultImports}}{{printf "%q" .}}
+  {{end}}
+  {{range $key, $value := .Imports}}{{$key}} {{ printf "%q" $value}}
+  {{end}}
 )
 
+
+{{if .IncludeTCK}}
+func TestTckSuite(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecsWithDefaultAndCustomReporters(t, "TCK Suite", []Reporter{NewTckReporter()})
+}
+{{else}}
 func TestTmp(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Tmp Suite")
 }
+{{end}}
+
