@@ -36,10 +36,20 @@ func init() {
 func GenerateTestSupport(name string, modelNames, operationIDs []string, includeUI bool,includeTCK bool, opts GenOpts) error {
 		// Load the spec
 	_, specDoc, err := loadSpec(opts.Spec)
+	
 	if err != nil {
 		return err
 	}
-
+	
+	paths:=specDoc.Spec().Paths.Paths
+	for k, v := range paths{
+		fmt.Printf("Paths =====> %#v\n", k)
+		if v.Get != nil{fmt.Printf("Get =====> %#v\n",v.Get.ID)}
+		if v.Put != nil{fmt.Printf("Put =====> %#v\n",v.Put.ID)}
+		if v.Post != nil{fmt.Printf("Post =====> %#v\n",v.Post.ID)}
+		if v.Delete != nil{fmt.Printf("Delete =====> %#v\n",v.Delete.ID)}
+		if v.Patch != nil{fmt.Printf("Patch =====> %#v\n",v.Patch.ID)}
+	}
 	models, mnc := make(map[string]spec.Schema), len(modelNames)
 	for k, v := range specDoc.Spec().Definitions {
 		for _, nm := range modelNames {
@@ -77,12 +87,11 @@ func GenerateTestSupport(name string, modelNames, operationIDs []string, include
 	}
 
 	generator := testGenerator{
-		Name:       name,
-		SpecDoc:    specDoc,
-		Models:     models,
-		Operations: operations,
-		Target:     opts.Target,
-		// Package:       filepath.Base(opts.Target),
+		Name:          name,
+		SpecDoc:       specDoc,
+		Models:        models,
+		Operations:    operations,
+		Target:        opts.Target,
 		DumpData:      opts.DumpData,
 		Package:       opts.APIPackage,
 		APIPackage:    opts.APIPackage,
@@ -108,6 +117,7 @@ type testGenerator struct {
 	Principal     string
 	Models        map[string]spec.Schema
 	Operations    map[string]spec.Operation
+	BasePath	  string
 	Target        string
 	DumpData      bool
 	IncludeUI     bool
@@ -130,15 +140,14 @@ func (t *testGenerator) GenerateTest() error {
 	if t.IncludeTCK {
 	if err := t.generateTCK(&test); err != nil {
 		return err
+		}
 	}
-}
 	if err := t.generateSuiteTest(&test); err != nil {
 		return err
 	}
-	
 	for _, operation := range test.Operations {
 		test.OperationID = operation.Name
-		if err := t.generateTest(&test); err != nil {
+		if err := t.generateTest(&operation,&test); err != nil {
 			return err
 		}		
 	}
@@ -159,7 +168,7 @@ func (t *testGenerator) generateSuiteTest(test *genTest) error {
 }
 
 func (t *testGenerator) generateTCK(test *genTest) error {
-	pth := filepath.Join(t.Target, "cmd", swag.ToCommandName(test.AppName))
+	pth := filepath.Join(t.Target, "cmd","utils")
 	nm :=  "tck_reporter"
 	buf := bytes.NewBuffer(nil)
 	if err := tckTemplate.Execute(buf, test); err != nil {
@@ -169,14 +178,18 @@ func (t *testGenerator) generateTCK(test *genTest) error {
 	return writeToFileIfNotExist(pth, nm, buf.Bytes())
 }
 
-func (t *testGenerator) generateTest(test *genTest) error {
+func (t *testGenerator) generateTest(test *genOperation, genT *genTest) error {
 	buf := bytes.NewBuffer(nil)
+	test.Package = genT.Package
 	if err := testTemplate.Execute(buf, test); err != nil {
 		return err
 	}
-	log.Println("rendered test template:", "test." + test.OperationID)
-	return writeToFile(filepath.Join(t.Target, "cmd", swag.ToCommandName(test.AppName)), test.OperationID + "_test", buf.Bytes())
+	log.Println("rendered test template:", test.Name)
+	return writeToFile(filepath.Join(t.Target, "cmd", swag.ToCommandName(genT.AppName)), test.Name + "_test", buf.Bytes())
 }
+
+
+
 
 func (t *testGenerator) makeCodegenTest() genTest {
 	sw := t.SpecDoc.Spec()

@@ -8,6 +8,7 @@ import (
   {{end}}
   {{range $key, $value := .Imports}}{{$key}} {{ printf "%q" $value}}
   {{end}}
+  . "github.com/maximilien/swagger-cf/generated_sb_test/cmd/utils"
 )
 
 
