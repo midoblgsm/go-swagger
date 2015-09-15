@@ -335,7 +335,10 @@ type genOperation struct {
 	ReturnsContainer     bool   //`json:"returnsContainer,omitempty"`     // -
 	ReturnsComplexObject bool   //`json:"returnsComplexObject,omitempty"` // -
 	ReturnsMap           bool   //`json:"returnsMap,omitempty"`
-
+	Path    			 string
+	Version              string
+	UsedMethod           string 
+	UnusedMethods		[]string
 	Params         []genParameter //`json:"params,omitempty"`         // -
 	QueryParams    []genParameter //`json:"queryParams,omitempty"`    // -
 	PathParams     []genParameter //`json:"pathParams,omitempty"`     // -

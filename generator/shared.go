@@ -48,7 +48,7 @@ type GenOpts struct {
 	ModelPackage  string
 	ServerPackage string
 	ClientPackage string
-	TestPackage string
+	TestPackage   string
 	Principal     string
 	Target        string
 	TypeMapping   map[string]string

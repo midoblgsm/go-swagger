@@ -41,15 +41,7 @@ func GenerateTestSupport(name string, modelNames, operationIDs []string, include
 		return err
 	}
 	
-	paths:=specDoc.Spec().Paths.Paths
-	for k, v := range paths{
-		fmt.Printf("Paths =====> %#v\n", k)
-		if v.Get != nil{fmt.Printf("Get =====> %#v\n",v.Get.ID)}
-		if v.Put != nil{fmt.Printf("Put =====> %#v\n",v.Put.ID)}
-		if v.Post != nil{fmt.Printf("Post =====> %#v\n",v.Post.ID)}
-		if v.Delete != nil{fmt.Printf("Delete =====> %#v\n",v.Delete.ID)}
-		if v.Patch != nil{fmt.Printf("Patch =====> %#v\n",v.Patch.ID)}
-	}
+	
 	models, mnc := make(map[string]spec.Schema), len(modelNames)
 	for k, v := range specDoc.Spec().Definitions {
 		for _, nm := range modelNames {
@@ -181,6 +173,13 @@ func (t *testGenerator) generateTCK(test *genTest) error {
 func (t *testGenerator) generateTest(test *genOperation, genT *genTest) error {
 	buf := bytes.NewBuffer(nil)
 	test.Package = genT.Package
+	addPaths(test)
+	op, _:= t.SpecDoc.OperationForName(test.Name)
+
+	if op.Extensions != nil {
+		a,_ :=op.Extensions.GetString("x-version")
+		test.Version = a}
+	
 	if err := testTemplate.Execute(buf, test); err != nil {
 		return err
 	}
@@ -410,3 +409,36 @@ type genTest struct {
 	SwaggerJSON         string
 }
 
+
+func addPaths (test *genOperation) {
+	if test.Name=="catalog"{
+		test.Path = "v2/catalog"
+		test.UsedMethod=  "GET"
+		test.UnusedMethods=[]string{"Post","Put","Patch","Options","Head","Delete"}
+	}
+	if test.Name=="createServiceInstance"{
+		test.Path = "v2/service_instances/aws-service-guid"
+		test.UsedMethod= "PUT"
+		test.UnusedMethods=[]string{"Post","Options","Head"}
+	}
+	if test.Name=="deprovisionServiceInstance"{
+		test.Path = "v2/service_instances/aws-service-guid"
+		test.UsedMethod= "DELETE"
+		test.UnusedMethods=[]string{"Post","Options","Head"}
+	}
+	if test.Name=="serviceBind"{
+		test.Path = "v2/service_instances/aws-service-guid/service_bindings/aws-service-binding"
+		test.UsedMethod= "PUT"
+		test.UnusedMethods=[]string{"Post","Patch","Options","Head"}
+	}
+	if test.Name=="serviceUnbind"{
+		test.Path = "v2/service_instances/aws-service-guid/service_bindings/aws-service-binding"
+		test.UsedMethod= "DELETE"
+		test.UnusedMethods=[]string{"Post","Patch","Options","Head"}
+	}
+	if test.Name=="updateServiceInstance"{
+		test.Path = "v2/createServiceInstance/aws-service-guid"
+		test.UsedMethod= "PATCH"
+		test.UnusedMethods=[]string{"Post","Options","Head"}
+	}
+}

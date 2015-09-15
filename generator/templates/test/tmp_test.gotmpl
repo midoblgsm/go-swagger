@@ -25,20 +25,32 @@ var _ = Describe("#{{.Name}}", func() {
 			{{.Name}}Result = true
 		})
 
-		It("{{.Name}} {{.Principal}} returns {{.ReturnsMap}}", func() {
+		It("{{.Name}} {{.Path}} returns {{.SuccessModel}}", func() {
 			{{if .Params}}
 			parameters, err := utils.ReadTestFixtures("{{.Name}}.json")
 			Expect(err).ToNot(HaveOccurred())
 			{{end}}
 			httpClient := utils.NewHttpClient("username", "apiKey")
-			response, {{.Name}}Err := httpClient.DoRawHttpRequest("v2/{{.Name}}","PUT",{{if .Params}} parameters{{else}}new(bytes.Buffer){{end}})
+			response, {{.Name}}Err := httpClient.DoRawHttpRequest("{{.Path}}","{{.UsedMethod}}",{{if .Params}} parameters{{else}}new(bytes.Buffer){{end}})
 				if strings.Contains(string(response), "404") {
 					{{.Name}}Result = false
 				}
 			Expect({{.Name}}Err).ToNot(HaveOccurred())
+			Expect(string(response)).ToNot(ContainSubstring("Unprocessable Entity"))
 			Expect({{.Name}}Result).To(BeTrue())
-			
 		})
+
+		{{if .Version}}
+		It("{{.Name}} {{.Path}} with app_id", func() {
+			parameters, err := utils.ReadTestFixtures("{{.Name}}WithAppid.json")
+			Expect(err).ToNot(HaveOccurred())
+			httpClient := utils.NewHttpClient("username", "apiKey")
+			response, serviceBindErr := httpClient.DoRawHttpRequest("{{.Path}}", "{{.UsedMethod}}", parameters)
+			Expect(response).ToNot(Equal(nil))
+			Expect(string(response)).ToNot(ContainSubstring("Unprocessable Entity"))
+			Expect({{.Name}}Err).ToNot(HaveOccurred())
+		})
+		{{end}}
 	})
 
 
@@ -49,40 +61,35 @@ Context("when {{.Name}} fail", func() {
 		})
 {{if .Params}}
 	Context("when parameters are empty", func() {
-			It("PUT /v2/{{.Name}} with empty parameters", func() {
+			It("{{.UsedMethod}} {{.Path}} with empty parameters", func() {
 				httpClient := utils.NewHttpClient("username", "apiKey")
-				response, {{.Name}}Err := httpClient.DoRawHttpRequest("v2/{{.Name}}", "PUT", new(bytes.Buffer))
+				response, {{.Name}}Err := httpClient.DoRawHttpRequest("{{.Path}}", "{{.UsedMethod}}", new(bytes.Buffer))
 				if strings.Contains(string(response), "404") {
 					{{.Name}}Result = false
 				}
-
+				
 				Expect({{.Name}}Err).ToNot(HaveOccurred())
 				Expect({{.Name}}Result).ToNot(BeTrue())
 			})
 		})
 	{{end}}	
+	{{$path := .Path}}
+	{{$name := .Name}}
 Context("when HTTP method is incorrect", func() {
-			It("PATCH /v2/{{.Name}} fails with 404", func() {
+			  {{range  $value := .UnusedMethods}}
+  			
+  				It("{{$value}}  {{$path}} fails with 404", func() {
 				httpClient := utils.NewHttpClient("username", "apiKey")
-				response, {{.Name}}Err := httpClient.DoRawHttpRequest("v2/{{.Name}}", "PATCH", new(bytes.Buffer))
+				response, {{$name}}Err := httpClient.DoRawHttpRequest("{{$path}}", "{{$value}}", new(bytes.Buffer))
 				if strings.Contains(string(response), "404") {
-					{{.Name}}Result = false
+					{{$name}}Result = false
 				}
 
-				Expect({{.Name}}Err).ToNot(HaveOccurred())
-				Expect({{.Name}}Result).ToNot(BeTrue())
+				Expect({{$name}}Err).ToNot(HaveOccurred())
+				Expect({{$name}}Result).ToNot(BeTrue())
 			})
 
-			It("POST /v2/{{.Name}} fails with 404", func() {
-				httpClient := utils.NewHttpClient("username", "apiKey")
-				response, {{.Name}}Err := httpClient.DoRawHttpRequest("v2/{{.Name}}", "POST", new(bytes.Buffer))
-				if strings.Contains(string(response), "404") {
-					{{.Name}}Result = false
-				}
-
-				Expect({{.Name}}Err).ToNot(HaveOccurred())
-				Expect({{.Name}}Result).ToNot(BeTrue())
-			})
+  			{{end}}
 		})
 	})
 })

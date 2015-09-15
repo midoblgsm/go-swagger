@@ -52,12 +52,12 @@ func (tck *tckReporter) SpecWillRun(specSummary *types.SpecSummary) {
 func (tck *tckReporter) SpecDidComplete(specSummary *types.SpecSummary) {
 
 	if specSummary.HasFailureState() {
-		if strings.EqualFold(specSummary.ComponentTexts[1], "#serviceBind") && strings.EqualFold(specSummary.ComponentTexts[2], "when serviceBind succeed") && strings.EqualFold(specSummary.ComponentTexts[3], "serviceBind with serviceBindData without app_id") {
+		if strings.EqualFold(specSummary.ComponentTexts[1], "#serviceBind") && strings.EqualFold(specSummary.ComponentTexts[2], "when serviceBind succeed") && strings.EqualFold(specSummary.ComponentTexts[3], "serviceBind v2/service_instances/aws-service-guid/service_bindings/aws-service-binding returns models.BindingResponse") {
 			tck.failsWithoutAppId = true
 			tck.failMessages = append(tck.failMessages, specSummary.ComponentTexts[1]+" "+specSummary.ComponentTexts[2]+" "+specSummary.ComponentTexts[3])
 		}
 	} else {
-		if strings.EqualFold(specSummary.ComponentTexts[1], "#serviceBind") && strings.EqualFold(specSummary.ComponentTexts[2], "when serviceBind succeed") && strings.EqualFold(specSummary.ComponentTexts[3], "serviceBind with serviceBindData with app_id") {
+		if strings.EqualFold(specSummary.ComponentTexts[1], "#serviceBind") && strings.EqualFold(specSummary.ComponentTexts[2], "when serviceBind succeed") && strings.EqualFold(specSummary.ComponentTexts[3], "serviceBind v2/service_instances/aws-service-guid/service_bindings/aws-service-binding with app_id") {
 			tck.succeedsWithAppId = true
 		}
 	}
