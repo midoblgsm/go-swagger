@@ -53,6 +53,48 @@ func GenerateServerOperation(operationNames, tags []string, includeHandler, incl
 			ModelsPackage:        opts.ModelPackage,
 			ClientPackage:        opts.ClientPackage,
 			ServerPackage:        opts.ServerPackage,
+			TestPackage:          opts.TestPackage,
+			Operation:            *operation,
+			SecurityRequirements: specDoc.SecurityRequirementsFor(operation),
+			Principal:            opts.Principal,
+			Target:               filepath.Join(opts.Target, opts.APIPackage),
+			Tags:                 tags,
+			IncludeHandler:       includeHandler,
+			IncludeParameters:    includeParameters,
+			DumpData:             opts.DumpData,
+		}
+		if err := generator.Generate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// GenerateTestOperation generates test suits for operations
+func GenerateTestOperation(operationNames, tags []string, includeHandler, includeParameters bool, opts GenOpts) error {
+	// Load the spec
+	specPath, specDoc, err := loadSpec(opts.Spec)
+	if err != nil {
+		return err
+	}
+
+	if len(operationNames) == 0 {
+		operationNames = specDoc.OperationIDs()
+	}
+
+	for _, operationName := range operationNames {
+		operation, ok := specDoc.OperationForName(operationName)
+		if !ok {
+			return fmt.Errorf("operation %q not found in %s", operationName, specPath)
+		}
+
+		generator := operationGenerator{
+			Name:                 operationName,
+			APIPackage:           opts.APIPackage,
+			ModelsPackage:        opts.ModelPackage,
+			ClientPackage:        opts.ClientPackage,
+			ServerPackage:        opts.ServerPackage,
+			TestPackage:          opts.TestPackage,
 			Operation:            *operation,
 			SecurityRequirements: specDoc.SecurityRequirementsFor(operation),
 			Principal:            opts.Principal,
@@ -76,6 +118,7 @@ type operationGenerator struct {
 	ModelsPackage        string
 	ServerPackage        string
 	ClientPackage        string
+	TestPackage			 string
 	Operation            spec.Operation
 	SecurityRequirements []spec.SecurityRequirement
 	Principal            string
@@ -221,14 +264,18 @@ func makeCodegenOperation(name, pkg, modelsPkg, principal, target string, operat
 	}
 
 	return genOperation{
-		Package:              pkg,
-		ClassName:            swag.ToGoName(name),
-		Name:                 swag.ToJSONName(name),
-		Description:          operation.Description,
-		DocString:            operationDocString(swag.ToGoName(name), operation),
-		ReceiverName:         receiver,
-		HumanClassName:       swag.ToHumanNameLower(swag.ToGoName(name)),
-		DefaultImports:       []string{filepath.Join(baseImport(filepath.Join(target, "..")), modelsPkg)},
+		Package:        pkg,
+		ClassName:      swag.ToGoName(name),
+		Name:           swag.ToJSONName(name),
+		Description:    operation.Description,
+		DocString:      operationDocString(swag.ToGoName(name), operation),
+		ReceiverName:   receiver,
+		HumanClassName: swag.ToHumanNameLower(swag.ToGoName(name)),
+		DefaultImports: []string{
+			filepath.ToSlash(filepath.Join(baseImport(filepath.Join(target, "..")), modelsPkg)),
+			"github.com/go-swagger/go-swagger/httpkit/middleware",
+			"github.com/go-swagger/go-swagger/strfmt",
+		},
 		Params:               params,
 		Summary:              operation.Summary,
 		QueryParams:          qp,
@@ -288,7 +335,10 @@ type genOperation struct {
 	ReturnsContainer     bool   //`json:"returnsContainer,omitempty"`     // -
 	ReturnsComplexObject bool   //`json:"returnsComplexObject,omitempty"` // -
 	ReturnsMap           bool   //`json:"returnsMap,omitempty"`
-
+	Path    			 string
+	Version              string
+	UsedMethod           string 
+	UnusedMethods		[]string
 	Params         []genParameter //`json:"params,omitempty"`         // -
 	QueryParams    []genParameter //`json:"queryParams,omitempty"`    // -
 	PathParams     []genParameter //`json:"pathParams,omitempty"`     // -

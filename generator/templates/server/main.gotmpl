@@ -51,10 +51,10 @@ func main() {
   }
 }
 
-
 func configureAPI(api *{{.Package}}.{{.AppName}}API) {
   // configure the api here
   api.ServeError = errors.ServeError
+
 
   {{range .Consumes}}{{if .Implementation}}api.{{.ClassName}}Consumer = {{.Implementation}}()
   {{else}}api.{{.ClassName}}Consumer = httpkit.ConsumerFunc(func(r io.Reader, target interface{}) error {
@@ -86,4 +86,3 @@ func configureAPI(api *{{.Package}}.{{.AppName}}API) {
   {{end}}
   {{end}}
 }
-

@@ -1,0 +1,26 @@
+package {{.Package}}_test
+
+import (
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+
+	{{range .DefaultImports}}{{printf "%q" .}}
+  {{end}}
+  {{range $key, $value := .Imports}}{{$key}} {{ printf "%q" $value}}
+  {{end}}
+  . "github.com/maximilien/cf-swagger/generated_service_broker_test/cmd/utils"
+)
+
+
+{{if .IncludeTCK}}
+func TestTckSuite(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecsWithDefaultAndCustomReporters(t, "TCK Suite", []Reporter{NewTckReporter()})
+}
+{{else}}
+func TestTmp(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Tmp Suite")
+}
+{{end}}
+

@@ -32,7 +32,8 @@ playground
 
 cmd/swagger/swagger.json.bak
 tags
-
+generator/bindata.go
+out/
 ### Vim
 [._]*.s[a-w][a-z]
 [._]s[a-w][a-z]

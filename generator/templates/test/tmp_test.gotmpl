@@ -1,0 +1,95 @@
+package {{.Package}}_test
+
+import (
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+
+  {{range .DefaultImports}}{{printf "%q" .}}
+  {{end}}
+  {{range $key, $value := .Imports}}{{$key}} {{ printf "%q" $value}}
+  {{end}}
+ {{if .Params}}
+  utils "github.com/maximilien/cf-swagger/utils"
+  {{end}}
+)
+
+var _ = Describe("#{{.Name}}", func() {
+	var (
+		{{.Name}}Result bool
+		{{.Name}}Err    error
+	)
+
+	Context("when {{.Name}} succeed", func() {
+		BeforeEach(func() {
+			{{.Name}}Err = nil
+			{{.Name}}Result = true
+		})
+
+		It("{{.Name}} {{.Path}} returns {{.SuccessModel}}", func() {
+			{{if .Params}}
+			parameters, err := utils.ReadTestFixtures("{{.Name}}.json")
+			Expect(err).ToNot(HaveOccurred())
+			{{end}}
+			httpClient := utils.NewHttpClient("username", "apiKey")
+			response, {{.Name}}Err := httpClient.DoRawHttpRequest("{{.Path}}","{{.UsedMethod}}",{{if .Params}} parameters{{else}}new(bytes.Buffer){{end}})
+				if strings.Contains(string(response), "404") {
+					{{.Name}}Result = false
+				}
+			Expect({{.Name}}Err).ToNot(HaveOccurred())
+			Expect(string(response)).ToNot(ContainSubstring("Unprocessable Entity"))
+			Expect({{.Name}}Result).To(BeTrue())
+		})
+
+		{{if .Version}}
+		It("{{.Name}} {{.Path}} with app_id", func() {
+			parameters, err := utils.ReadTestFixtures("{{.Name}}WithAppid.json")
+			Expect(err).ToNot(HaveOccurred())
+			httpClient := utils.NewHttpClient("username", "apiKey")
+			response, serviceBindErr := httpClient.DoRawHttpRequest("{{.Path}}", "{{.UsedMethod}}", parameters)
+			Expect(response).ToNot(Equal(nil))
+			Expect(string(response)).ToNot(ContainSubstring("Unprocessable Entity"))
+			Expect({{.Name}}Err).ToNot(HaveOccurred())
+		})
+		{{end}}
+	})
+
+
+Context("when {{.Name}} fail", func() {
+		BeforeEach(func() {
+			{{.Name}}Err = nil
+			{{.Name}}Result = false
+		})
+{{if .Params}}
+	Context("when parameters are empty", func() {
+			It("{{.UsedMethod}} {{.Path}} with empty parameters", func() {
+				httpClient := utils.NewHttpClient("username", "apiKey")
+				response, {{.Name}}Err := httpClient.DoRawHttpRequest("{{.Path}}", "{{.UsedMethod}}", new(bytes.Buffer))
+				if strings.Contains(string(response), "404") {
+					{{.Name}}Result = false
+				}
+				
+				Expect({{.Name}}Err).ToNot(HaveOccurred())
+				Expect({{.Name}}Result).ToNot(BeTrue())
+			})
+		})
+	{{end}}	
+	{{$path := .Path}}
+	{{$name := .Name}}
+Context("when HTTP method is incorrect", func() {
+			  {{range  $value := .UnusedMethods}}
+  			
+  				It("{{$value}}  {{$path}} fails with 404", func() {
+				httpClient := utils.NewHttpClient("username", "apiKey")
+				response, {{$name}}Err := httpClient.DoRawHttpRequest("{{$path}}", "{{$value}}", new(bytes.Buffer))
+				if strings.Contains(string(response), "404") {
+					{{$name}}Result = false
+				}
+
+				Expect({{$name}}Err).ToNot(HaveOccurred())
+				Expect({{$name}}Result).ToNot(BeTrue())
+			})
+
+  			{{end}}
+		})
+	})
+})

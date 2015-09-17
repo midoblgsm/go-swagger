@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -e
+
+#set GOPATH
+export GOPATH=/Users/mohamed/Documents/git/swagger-bosh
+go build -o $(dirname $0)/../out/swagger  ./cmd/swagger/swagger.go
