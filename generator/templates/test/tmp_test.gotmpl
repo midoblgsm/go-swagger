@@ -9,7 +9,7 @@ import (
   {{range $key, $value := .Imports}}{{$key}} {{ printf "%q" $value}}
   {{end}}
  {{if .Params}}
-  utils "github.com/maximilien/swagger-cf/utils"
+  utils "github.com/maximilien/cf-swagger/utils"
   {{end}}
 )
 
